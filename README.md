@@ -71,7 +71,7 @@ docker compose up -d --build
 | **unRAID** | Compose Manager 新建 stack，粘贴 `docker-compose.yml` |
 | **任意 Linux** | 装好 docker + compose 插件，`docker compose up -d --build` |
 
-详细图文步骤见 [docs/部署教程.md](docs/部署教程.md)。
+详细图文步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 ## 🖼️ 在线演示 & 界面预览
 
@@ -127,7 +127,7 @@ zeeho-nas/
 ├── server.js                    # 兼容层：宿主对象 + HTTP 服务 + 定时签到
 ├── script/zeeho_box_enhanced.js # 上游脚本 v2.16.45（原样，勿手改）
 ├── data/store.json              # 运行时生成：账号 Token 与配置（已 gitignore）
-├── docs/部署教程.md             # 图文部署说明
+├── docs/DEPLOY.md             # 图文部署说明
 ├── Dockerfile
 ├── docker-compose.yml
 ├── update-script.sh             # 拉取上游最新脚本
