@@ -3,44 +3,57 @@
 <img src="https://raw.githubusercontent.com/cluck798/ZEEHO/main/ZEEHO.png" width="120" alt="ZEEHO" />
 
 # ZEEHO · NAS
-> ⚠️ **非官方部署版**：把上游代理脚本跑成常驻 Web 服务。仅用于个人学习研究，禁止商用。
+> ⚠️ 非官方部署版，仅用于学习研究，禁止商用，使用产生一切风险自行承担
 
-极核 ZEEHO 签到面板的 **Docker / NAS 包装层**：上游 [cluck798/ZEEHO](https://github.com/cluck798/ZEEHO) 的脚本原本依赖 Loon / Surge / Quantumult X / Shadowrocket 运行，本项目用 Node.js 补齐它需要的宿主接口，于是它能直接跑在飞牛 fnOS、群晖、unRAID 或任意装了 Docker 的机器上——**浏览器打开就是面板，签到由容器定时器驱动，手机不用常驻代理**。
+极核 ZEEHO 签到面板的 **Docker / NAS 包装层**。上游 [cluck798/ZEEHO](https://github.com/cluck798/ZEEHO) 的脚本运行在 Loon / Surge / Quantumult X / Shadowrocket 里，本项目用 Node.js 补齐它依赖的宿主接口（`$request` / `$done` / `$httpClient` / `$persistentStore` / `$notification`），于是它能直接跑在飞牛 fnOS、群晖、unRAID 或任意 Docker 主机上：**浏览器打开就是面板，签到由容器定时器驱动，手机不再需要常驻代理工具。**
 
-> 上游脚本 `script/zeeho_box_enhanced.js` **原样分发（v2.16.45）**，本仓库只新增 `server.js` 这一层兼容层，不改任何业务逻辑与接口签名。
+上游脚本 `script/zeeho_box_enhanced.js` **原样分发（v2.16.45）**，本仓库只加一层兼容层，不改任何业务逻辑、接口签名与界面。
 
-## ✨ 主要特性
+## ✨ 主要功能
 
-### 🖥️ 摆脱代理工具
-- 不再需要 Loon / Surge / QX / 小火箭 常驻后台，也不用手机关屏就断签到
-- 面板 HTML 由服务端直出，`/api/*` 同源，无跨域、无 MITM 链路
-- 手机、平板、电脑浏览器都能开，NAS 内网 IP 直连
+### 🖥️ 免代理工具常驻（本仓库新增）
+- 不依赖 Loon / Surge / QX / 小火箭，也不怕手机关屏、清后台、断代理
+- 面板 HTML 服务端直出，`/api/*` 同源，无跨域、无 MITM 中转
+- NAS 内网 IP 直连，手机 / 平板 / 电脑浏览器都能开，多端同时看
+- 零 npm 依赖（只用 Node 内置 `fetch` / `vm` / `http`），镜像 `node:20-alpine`，构建 1–2 分钟
+- 账号与配置落在挂载的 `data/store.json`，不出本机；支持 `PANEL_AUTH` 开 Basic Auth
+- `bash update-script.sh` 双源（raw + jsDelivr）拉上游最新脚本并校验体积，重启即生效
 
-### ⏰ 7×24 定时签到
-- 容器内定时器每天 `CRON_TIME`（默认 07:05）自动跑一轮全账号签到
-- 与面板里的「立即签到」完全等价，结果写日志，可在 `/__diagnostics` 查
-- 面板自身的「打开面板补签」逻辑照旧生效，两条路互不冲突
+### 📅 签到 & 积分任务
+- 每日自动签到，统计连续签到天数（跨月连签不重置）
+- 社区互动任务：发帖、点赞、评论、分享，自动清理临时动态
+- 连续签到满 **30 天自动开启盲盒抽奖**
+- 积分中心：积分明细、补签卡数量、签到日历、盲盒进度
+- 多账号支持，账号异常**隔离运行**；签到限流自动退避重试
 
-### 🧩 零依赖 · 小体积
-- 只用 Node 内置能力（`fetch` / `vm` / `http`），**没有一条 npm 依赖**
-- 镜像基于 `node:20-alpine`，构建 1–2 分钟，运行时内存几十 MB
+### 🚗 车辆状态监控（读取）
+- SOC 电量、续航、电压、充电电流、充电状态
+- 前后胎压、胎温、今日骑行里程/时长/最高速度
+- 坐垫锁 / 整车锁 / 开关机 / 在线状态、GPS 定位 + 地图跳转、服务到期时间
+- 充电统计：本月次数、充入电量、电费估算（按设置的电价），充满 / 离线提醒
 
-### 🔐 数据自持
-- 账号 Token、配置全部落在挂载的 `data/store.json`，不经过任何第三方服务器
-- 每次请求独立 `vm` 上下文执行，状态只通过这一个文件共享，互不污染
-- 支持 `PANEL_AUTH` 开 HTTP Basic Auth
+### 🏍️ 隐藏骑行数据（骑行页）
+- 还原官方 App 按车型能力位隐藏的统计：**极速、急加速、急刹、压弯**
+- 月度日汇总（`myRideInfo`）+ 轨迹扫描（`ridetrack_v2`）：急刹/压弯按原始轨迹重算
+- 点击日期查看每趟行程明细（出发时间 / 里程 / 均速 / 极速 / 急刹 / 压弯），支持轨迹回放与分享海报
 
-### 🔄 一键跟上游
-- `bash update-script.sh` 从 raw / jsDelivr 双源拉最新脚本并校验体积，重启即生效
-- 上游接口变动时，通常更新脚本就能恢复，不必等本仓库发版
+### 🎛️ 远程车辆控制（4G 下发指令）
+> ⚠️ 会真实操作车辆，请在车辆附近谨慎操作，误触风险自负。首次使用需同意「车控风险确认」。
+1. 🔔 寻车（闪灯）
+2. 📣 鸣笛寻车
+3. 💺 弹开坐垫
+4. 🔒 云端开关锁
+5. ⚡ 充电功率设置
 
-### 📱 多端访问
-- 响应式面板，桌面/移动浏览器都可用
-- 可选反代 + HTTPS 暴露到公网（**务必先开 `PANEL_AUTH`**）
+### 🔔 通知与提醒
+- 自定义 Bark Key，签到结果 / 充电充满 / 车辆离线 / 移车提醒推送到手机
+- 容器内的 `$notification` 落日志，`/__diagnostics` 可回看
 
-## 🚀 部署
+### 🔄 版本自更新
+- 面板「设置 → 关于 → 检查更新」双源比对版本号（raw + jsDelivr，避免 CDN 12h 缓存误判）
+- 服务器侧同样可以 `bash update-script.sh` 直接把脚本换新
 
-### 方式一：Docker Compose（推荐）
+## 🚀 快速部署
 
 ```bash
 git clone https://github.com/panghuC8520/zeeho-nas.git
@@ -48,27 +61,23 @@ cd zeeho-nas
 docker compose up -d --build
 ```
 
-打开 `http://<主机IP>:8080/` → 设置齿轮 → 账号与导入 → **手机号登录**（发码填码，
-面板直接调官方 `loginByPhone`，不需要抓包），或粘贴极核 App 抓到的 Token。
+打开 `http://<主机IP>:8080/` → 设置齿轮 → 账号与导入 → **手机号登录**（发码填码，面板直接调官方
+`loginByPhone`，不需要抓包），或粘贴极核 App 抓到的 Token。
 
-### 方式二：飞牛 fnOS 图形界面
+| 平台 | 做法 |
+| :-- | :-- |
+| **飞牛 fnOS** | 仓库放进 `/vol1/1000/docker/zeeho-nas`，Docker → 项目/Compose → 新建并选该目录 → 构建启动 |
+| **群晖 DSM** | Container Manager → 项目 → 新增 → 选该目录的 `docker-compose.yml` |
+| **unRAID** | Compose Manager 新建 stack，粘贴 `docker-compose.yml` |
+| **任意 Linux** | 装好 docker + compose 插件，`docker compose up -d --build` |
 
-1. 应用中心装好「Docker」；
-2. 把仓库放进 `/vol1/1000/docker/zeeho-nas`（文件管理上传 zip 后解压，或 SMB 直接拖）；
-3. Docker → **项目 / Compose** → 新建，项目路径选该目录，自动读取 `docker-compose.yml`；
-4. 构建并启动，端口映射 `8080`（可改）；
-5. 浏览器访问 `http://<飞牛IP>:8080/`。
+详细图文步骤见 [docs/部署教程.md](docs/部署教程.md)。
 
-> 也可直接下载 [zeeho-nas.zip](https://github.com/panghuC8520/zeeho-nas/archive/refs/heads/main.zip) 解压使用。
+## 🖼️ 在线演示 & 界面预览
 
-### 方式三：群晖 / unRAID / 其他
-
-只要支持 Docker Compose 即可，照抄 `docker-compose.yml`：挂一个 `./data` 卷、映射一个端口，
-其余全是环境变量。群晖用「项目 → 新增」，unRAID 用 Compose Manager。
-
-## 🖼️ 界面预览
-
-> 界面与上游完全一致（同一份内嵌 HTML），数据来自你自己的账号。
+> **上游在线演示（免安装、示例数据、不联网）**：https://cluck798.github.io/ZEEHO/
+>
+> 界面与上游完全一致（同一份内嵌 HTML），本仓库未做任何改动。
 
 | 首页 | 积分 |
 | :--: | :--: |
@@ -97,7 +106,7 @@ docker compose up -d --build
 
 ## 🔧 工作原理
 
-上游脚本是代理工具的重写脚本，靠 5 个宿主全局对象工作；本层把它们用 Node 实现：
+上游脚本靠 5 个宿主全局对象工作，本层用 Node 逐个实现：
 
 | 宿主对象 | 本仓库实现 |
 | :-- | :-- |
@@ -107,8 +116,9 @@ docker compose up -d --build
 | `$httpClient.get/post/put/delete` | Node 内置 `fetch`，回调签名保持 `(err, resp, body)` |
 | `$notification.post` | 写入日志（容器内无系统通知） |
 
-另外注入 `$loon = {}`，让脚本自带 `Env` 类判定为 Loon 环境：存储走 `$persistentStore`、
-HTTP 走 `$httpClient`，从而绕开脚本里 `got` / `iconv-lite` 的 Node 分支——所以不需要任何 npm 依赖。
+另外注入 `$loon = {}`，让脚本自带 `Env` 类判定为 Loon 环境：存储走 `$persistentStore`、HTTP 走
+`$httpClient`，从而绕开脚本里 `got` / `iconv-lite` 的 Node 分支——所以不需要任何 npm 依赖。
+每个请求在独立 `vm` 上下文执行，状态只通过 `store.json` 共享。
 
 ## 📦 目录结构
 
@@ -117,11 +127,13 @@ zeeho-nas/
 ├── server.js                    # 兼容层：宿主对象 + HTTP 服务 + 定时签到
 ├── script/zeeho_box_enhanced.js # 上游脚本 v2.16.45（原样，勿手改）
 ├── data/store.json              # 运行时生成：账号 Token 与配置（已 gitignore）
+├── docs/部署教程.md             # 图文部署说明
 ├── Dockerfile
 ├── docker-compose.yml
 ├── update-script.sh             # 拉取上游最新脚本
-├── push-to-github.ps1           # 本机一键把项目推到 GitHub（走 REST API，不需要 git）
-└── NOTICE.md                    # 来源与许可声明
+├── push-to-github.ps1           # 本机一键推送到 GitHub（REST API，不需要 git）
+├── LICENSE                      # 上游非商业许可协议
+└── NOTICE.md                    # 来源与分工说明
 ```
 
 ## ❓ 常见问题
@@ -142,23 +154,23 @@ zeeho-nas/
 bash update-script.sh && docker compose restart
 ```
 
-脚本会从 `raw.githubusercontent.com` 优先、`cdn.jsdelivr.net` 兜底拉取，并校验文件体积。
+脚本优先 `raw.githubusercontent.com`、兜底 `cdn.jsdelivr.net`，并校验文件体积（小于 200KB 视为失败）。
 
 ## ⚠️ 注意事项
 
 - `data/store.json` 里是**真实 Token**：不要提交、不要截图、不要公开部署到公网；外网访问请套反代 + HTTPS + `PANEL_AUTH`。
 - 本仓库**不含**任何破解、绕过付费或破解官方 App 的功能，所有接口调用均来自上游脚本。
-- 远程控车（开锁 / 坐垫 / 鸣笛 / 充电功率）会真实下发 4G 指令，误触有后果，请按上游说明谨慎使用。
+- 远程控车会真实下发 4G 指令，误触有后果，请按上游说明谨慎使用。
 - 官方 App 更新导致接口加密变化时脚本可能失效，等上游适配或自行更新脚本。
 - 使用第三方脚本存在账号风控风险，请自行评估。
 
 ## 📄 许可协议
 
-- 上游脚本及其业务逻辑遵循上游 [LICENSE](https://github.com/cluck798/ZEEHO/blob/main/LICENSE)：**免费个人使用，禁止售卖、付费分发、付费代安装、捆绑销售及任何商业用途**，转载须保留作者署名与出处。
+- 上游脚本及其业务逻辑遵循上游 [LICENSE](LICENSE)：**免费个人使用，禁止售卖、付费分发、付费代安装、捆绑销售及任何商业用途**，转载须保留作者署名与出处。
 - 本仓库仅新增部署包装层，同样**仅限个人学习研究**，不提供任何担保；使用产生的一切后果自行承担。
-- 详细来源与分工见 [NOTICE.md](NOTICE.md)。
+- 来源与分工见 [NOTICE.md](NOTICE.md)。若上游作者认为本仓库不妥，联系后立即删除。
 
 ## 🙏 致谢
 
-- 上游项目与全部业务逻辑：[cluck798/ZEEHO](https://github.com/cluck798/ZEEHO)（作者 lucky）——签到、积分、盲盒、车辆状态、骑行数据、车控的协议与实现都来自上游
+- 上游项目与全部业务逻辑：[cluck798/ZEEHO](https://github.com/cluck798/ZEEHO)（作者 lucky）——签到、积分、盲盒、车辆状态、骑行数据、车控的协议与实现全部来自上游
 - 界面由上游脚本内嵌，本仓库未做任何改动
