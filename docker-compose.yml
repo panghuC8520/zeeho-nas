@@ -1,0 +1,20 @@
+services:
+  zeeho:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: zeeho-panel:local
+    container_name: zeeho-panel
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Asia/Shanghai
+      CRON_ENABLE: "1"
+      CRON_TIME: "07:05"
+      # 强烈建议开启：形如 admin:ChangeMe_123
+      PANEL_AUTH: ""
+      DEBUG: "0"
+    volumes:
+      # 账号 Token 与配置都在这里，务必纳入备份
+      - ./data:/app/data

@@ -1,0 +1,15 @@
+{
+  "name": "zeeho-nas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ZEEHO 面板的 NAS/Docker 兼容层：把 Loon/Surge 脚本跑成常驻 Web 服务",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "update-script": "bash update-script.sh"
+  },
+  "dependencies": {}
+}
