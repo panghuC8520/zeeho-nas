@@ -1,0 +1,33 @@
+ZEEHO 面板非商业许可协议 v1.0
+ZEEHO Panel Non-Commercial License v1.0
+
+版权所有 (c) 2026 lucky / cluck798
+Copyright (c) 2026 lucky / cluck798
+保留所有权利 / All rights reserved.
+
+一、授权范围
+在完全遵守本协议的前提下，任何人可以免费获取、使用、复制、修改本项目源代码及构建产物，用于个人学习、研究与自用。
+
+二、禁止行为
+1. 禁止任何形式的售卖、付费分发、付费代安装、捆绑销售或变相收费，包括但不限于电商平台、社交群组、网盘付费下载、会员制、赞助换授权等。
+2. 禁止将本项目或其任何修改版用于商业用途或盈利活动。
+3. 禁止移除、篡改、隐藏本协议、版权声明，以及项目内的作者标识（包括账号资料中的开源免费声明）。
+4. 禁止宣称本项目为其原创，或冒充作者进行分发、推广。
+
+三、分发条件
+允许免费转发或分发本项目及其修改版，但必须同时满足：
+1. 保留本协议与全部版权声明；
+2. 不以任何形式收费；
+3. 注明原始出处：https://github.com/cluck798/ZEEHO
+
+四、协议终止
+任何违反本协议的行为将立即自动终止您在本协议下的全部授权，您必须停止使用并删除所有副本。
+
+五、免责声明
+本项目按“现状”提供，不提供任何明示或暗示的担保。因使用本项目产生的任何直接或间接损失，作者不承担责任。本项目与极核官方无关，仅供学习研究。
+
+六、历史版本
+本协议适用于本版本及之后发布的版本。此前已按 GNU GPLv2 发布的版本，其授权仍按 GPLv2 执行，不因本协议而改变。
+
+English Summary (for reference; the Chinese text prevails):
+This project is free for personal, non-commercial use only. Selling, paid distribution, paid installation, bundling for profit, commercial use, removing author notices, and claiming authorship are strictly prohibited. Redistribution must be free of charge, must retain this license and attribution, and must link to the original repository. Any violation terminates all rights immediately. Provided "as is" without warranty. Previously released versions under GPLv2 remain under GPLv2.
