@@ -1,4 +1,4 @@
-﻿# 轮询 GitHub device flow 拿 token → 推送 zeeho-nas → 更新仓库简介
+﻿# 轮询 GitHub device flow 拿 token → 调用 push-to-github.ps1 推送（含仓库简介更新）
 $ErrorActionPreference = 'Stop'
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
 
@@ -30,22 +30,12 @@ while ((Get-Date) -lt $deadline) {
 }
 if (-not $token) { Write-Output '设备码过期，未拿到 token'; exit 1 }
 
-Set-Content -Path (Join-Path $env:TEMP 'zeeho_gh_token.txt') -Value $token -NoNewline -Encoding ASCII
 Write-Output "已拿到 token (scope=$scope)，开始推送…"
-
 $env:GITHUB_TOKEN = $token
 Push-Location $Root
 try {
+  # push-to-github.ps1 内部已完成：建仓/推文件/更新简介（全部 UTF-8 字节发送）
   & "$Root\push-to-github.ps1" -RepoName 'zeeho-nas'
-
-  # 仓库简介：对齐上游的写法（一句话说清定位）
-  $H = @{ Authorization = "Bearer $token"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28'; 'User-Agent' = 'zeeho-uploader' }
-  $patch = @{
-    description = '极核 ZEEHO 签到面板 · NAS/Docker 版：浏览器直接管理，免代理工具常驻，支持飞牛 fnOS / 群晖 / unRAID'
-    homepage    = ''
-  } | ConvertTo-Json -Compress
-  $null = Invoke-RestMethod -Uri 'https://api.github.com/repos/panghuC8520/zeeho-nas' -Headers $H -Method Patch -Body $patch -ContentType 'application/json'
-  Write-Output '仓库简介已更新'
 } finally {
   Pop-Location
 }
