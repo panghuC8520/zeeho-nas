@@ -141,7 +141,7 @@ zeeho-nas/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── update-script.sh             # 拉取上游最新脚本
-├── push-to-github.ps1           # 本机一键推送到 GitHub（REST API，不需要 git）
+├── tools/                       # 运维/调试脚本（推送、发版、布局测量、截图）
 ├── LICENSE                      # 上游非商业许可协议
 └── NOTICE.md                    # 来源与分工说明
 ```

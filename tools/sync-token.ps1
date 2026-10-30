@@ -17,7 +17,7 @@ $token = $env:GITHUB_TOKEN
 if (-not $token) { throw '请先设置 $env:GITHUB_TOKEN（GitHub → Settings → Developer settings → Tokens (classic) → 勾 public_repo）' }
 $token = $token.Trim()
 
-$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $Zip = Join-Path (Split-Path $Root -Parent) 'zeeho-nas.zip'
 
 # 0) 先验一下 token
@@ -26,7 +26,7 @@ Write-Output "token 账号：$($me.login)"
 
 # 1) 推代码
 Push-Location $Root
-try { & "$Root\push-to-github.ps1" -RepoName $RepoName }
+try { & "$Root\tools\push-to-github.ps1" -RepoName $RepoName }
 finally { Pop-Location }
 
 # 2) Release + 附件

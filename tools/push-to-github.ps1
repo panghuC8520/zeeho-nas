@@ -22,11 +22,11 @@ try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::
 $Token = $env:GITHUB_TOKEN
 if (-not $Token -and -not $DryRun) { throw '请先设置 $env:GITHUB_TOKEN' }
 
-$Root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Push-Location $Root
 try {
   # ---------- 1. 收集文件 ----------
-  $skipDirs = @('data', 'node_modules', '.git', '.devflow')
+  $skipDirs = @('data', 'node_modules', '.git', '.devflow', 'shots')
   $files = Get-ChildItem -Recurse -File | Where-Object {
     $rel = $_.FullName.Substring($Root.Length).TrimStart('\', '/') -replace '\\', '/'
     ($skipDirs -notcontains ($rel -split '/')[0]) -and ($rel -notmatch '\.log$')
