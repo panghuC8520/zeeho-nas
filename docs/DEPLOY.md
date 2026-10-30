@@ -44,6 +44,14 @@ docker logs -f zeeho-panel
 **开密码**：`docker-compose.yml` 里把 `PANEL_AUTH: ""` 改成 `PANEL_AUTH: "admin:你的密码"`，
 重启后浏览器会弹 Basic Auth。
 
+**界面开关**（都在 `environment:` 里，`0` 即关闭）：
+
+| 变量 | 作用 |
+| :-- | :-- |
+| `PC_UI` | 电脑端宽屏适配：≥1024px 时换成左侧导航 + 多列卡片 |
+| `PANEL_PATCH` | 设置页开关即时保存，避免被 60 秒自动刷新冲掉 |
+| `STRIP_AUTHOR` | 隐藏面板里的作者联系方式 / GitHub / 赞助入口（署名仍在 NOTICE / LICENSE） |
+
 ---
 
 ## 三、路线 B：飞牛 fnOS 图形界面

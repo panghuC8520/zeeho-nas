@@ -15,6 +15,10 @@ services:
       # 强烈建议开启：形如 admin:ChangeMe_123
       PANEL_AUTH: ""
       DEBUG: "0"
+      # 界面：1=开启，0=关闭
+      PC_UI: "1"            # 电脑端宽屏适配（左侧导航 / 多列卡片）
+      PANEL_PATCH: "1"      # 设置页开关即时保存（不用再点底部「保存配置」）
+      STRIP_AUTHOR: "1"     # 隐藏面板内的作者联系方式 / 赞助入口（署名保留在 NOTICE/LICENSE）
     volumes:
       # 账号 Token 与配置都在这里，务必纳入备份
       - ./data:/app/data

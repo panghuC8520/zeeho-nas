@@ -53,6 +53,13 @@
 - 面板「设置 → 关于 → 检查更新」双源比对版本号（raw + jsDelivr，避免 CDN 12h 缓存误判）
 - 服务器侧同样可以 `bash update-script.sh` 直接把脚本换新
 
+### 🖥️ 桌面端布局与体验增强（本仓库注入，可关）
+- **≥1024px 自动切换电脑布局**：左侧竖排导航、内容区 1240px（≥1600px 为 1460px）、首页账号卡片网格、设置页与车辆页两列、签到日历行高收敛
+- **设置页开关即时保存**：定时签到 / 车辆状态监控 / 提醒推送 / 签到时间，改一下就写入服务端，不再被 60 秒自动刷新冲掉（关掉后恢复「点底部保存配置」的原逻辑）
+- **深链**：`?zh_tab=cfg|points|vehicle|ride|logs` 直接打开对应页，方便收藏
+- **界面精简**：面板内的作者联系方式 / GitHub / 赞助入口默认隐藏（`STRIP_AUTHOR=0` 恢复；署名与许可见 [NOTICE.md](NOTICE.md) 与 [LICENSE](LICENSE)）
+- **调试小工具**：`tools/measure.js`、`tools/shot.js` 走 DevTools 协议量布局 / 截图，排查样式问题用
+
 ## 🚀 快速部署
 
 ```bash
@@ -103,6 +110,9 @@ docker compose up -d --build
 | `REQ_TIMEOUT_MS` | `180000` | 单次脚本执行上限，多账号别调太小 |
 | `DEBUG` | `0` | `1` 把脚本日志打到容器 stdout |
 | `ZEEHO_SCRIPT` | `script/zeeho_box_enhanced.js` | 换脚本路径 |
+| `PC_UI` | `1` | 电脑端宽屏适配（左侧导航 / 多列卡片），`0` 关闭 |
+| `PANEL_PATCH` | `1` | 设置页开关即时保存，`0` 关闭 |
+| `STRIP_AUTHOR` | `1` | 隐藏面板内作者联系方式 / 赞助入口，`0` 恢复显示 |
 
 ## 🔧 工作原理
 
