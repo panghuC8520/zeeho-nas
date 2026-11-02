@@ -1,7 +1,8 @@
 // 用 DevTools 协议量页面的真实布局（无头 Edge 需先带 --remote-debugging-port=9222 启动）
 // 用法: node tools\measure.js "http://127.0.0.1:18098/?demo" "<js 表达式>"
 const url = process.argv[2];
-const expr = process.argv[3] || 'document.title';
+let expr = process.argv[3] || 'document.title';
+if (expr.startsWith('@')) { const p = expr.slice(1); expr = require('fs').readFileSync(p, 'utf8'); } // exprFile
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -42,7 +43,7 @@ async function main() {
     await sleep(4500);
   }
   const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
-  const out = r.result && r.result.result ? r.result.result.value : r;
+  const out = r.result && r.result.result ? r.result.result.value : JSON.stringify(r).slice(0,500); 
   console.log(typeof out === 'string' ? out : JSON.stringify(out, null, 2));
   ws.close();
 }

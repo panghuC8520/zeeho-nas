@@ -34,8 +34,24 @@ if (!fs.existsSync(SCRIPT_FILE)) {
   console.error(`[fatal] 找不到脚本: ${SCRIPT_FILE}\n请先执行 bash update-script.sh 或挂载脚本文件。`);
   process.exit(1);
 }
-const SOURCE = fs.readFileSync(SCRIPT_FILE, 'utf8');
-const SCRIPT_MTIME = fs.statSync(SCRIPT_FILE).mtime.toISOString();
+let SOURCE = fs.readFileSync(SCRIPT_FILE, 'utf8');
+let SCRIPT_MTIME = fs.statSync(SCRIPT_FILE).mtimeMs;
+function scriptVersionOf(src) {
+  const m = String(src).match(/#!version=([0-9]+\.[0-9]+\.[0-9]+)/);
+  return m ? m[1] : 'unknown';
+}
+function reloadScript() {
+  SOURCE = fs.readFileSync(SCRIPT_FILE, 'utf8');
+  SCRIPT_MTIME = fs.statSync(SCRIPT_FILE).mtimeMs;
+  pushLog(`[reload] 脚本已重载 ${scriptVersionOf(SOURCE)}`);
+  return scriptVersionOf(SOURCE);
+}
+function reloadIfChanged() {
+  try {
+    const m = fs.statSync(SCRIPT_FILE).mtimeMs;
+    if (m !== SCRIPT_MTIME) reloadScript();
+  } catch (e) {}
+}
 
 // ============================== 持久化 ==============================
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -175,7 +191,59 @@ const PANEL_PATCH = `<script data-zh-patch="1">
       ti.addEventListener('change', function(){ save({ autoSigninTime: ti.value || '07:00' }, '签到时间'); });
     }
   }
-  function tick(){ try { bind(); syncUI(); } catch(e){} }
+  // 签到日历：上游只给了「上月」，补一个「下月」，两个按钮包进 flex 容器免得挤乱标题
+  function addMonthNav(){
+    var heads = [].slice.call(document.querySelectorAll('#pagePoints .pc-head')).filter(function(h){
+      return (h.textContent || '').indexOf('签到日历') >= 0;
+    });
+    if (!heads.length) return;
+    // 去重：只保留第一个「下月」，其余删掉（反复重渲染/重复注入都能自愈）
+    var dup = document.querySelectorAll('.zh-next-month');
+    for (var i = 1; i < dup.length; i++) dup[i].remove();
+    var head = heads[0];
+    var prevs = [].slice.call(head.querySelectorAll('button')).filter(function(b){ return b.textContent.trim() === '上月'; });
+    var prev = prevs[0];
+    if (!prev) return;
+    if (head.querySelector('.zh-next-month')) return;
+    var wrap = document.createElement('span');
+    wrap.className = 'zh-month-nav';
+    wrap.style.cssText = 'display:flex;gap:6px;flex-shrink:0';
+    head.insertBefore(wrap, prev);
+    wrap.appendChild(prev);
+    var next = document.createElement('button');
+    next.className = 'btn sm zh-next-month';
+    next.textContent = '下月';
+    next.onclick = function(){ try { window.ptMonthShift(1); } catch(e){} };
+    wrap.appendChild(next);
+  }
+  // 版本块：发现新版本时插一个「立即更新服务器脚本」按钮（走 /api/self-update）
+  function addUpdateBtn(){
+    var box = document.getElementById('verExtra');
+    if (!box || box.querySelector('.zh-upd-btn')) return;
+    var txt = box.textContent || '';
+    if (txt.indexOf('发现新版本') < 0) return;
+    var b = document.createElement('button');
+    b.className = 'btn sm primary zh-upd-btn';
+    b.textContent = '立即更新服务器脚本';
+    b.style.cssText = 'margin-top:8px;display:block';
+    b.onclick = function(){
+      b.disabled = true; b.textContent = '更新中…（约 1 分钟）';
+      fetch('/api/self-update', { method:'POST', cache:'no-store' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (d && d.ok) {
+            b.textContent = d.changed ? ('已更新到 v' + d.version + '，正在刷新…') : ('已是最新 v' + d.version + '，正在刷新…');
+            setTimeout(function(){ location.reload(); }, 1200);
+          } else {
+            b.disabled = false; b.textContent = '更新失败，点此重试';
+            tip('更新失败：' + ((d && d.error) || '未知'));
+          }
+        })
+        .catch(function(){ b.disabled = false; b.textContent = '更新失败，点此重试'; });
+    };
+    box.appendChild(b);
+  }
+  function tick(){ try { bind(); syncUI(); addUpdateBtn(); addMonthNav(); } catch(e){} }
   try {
     if (typeof window.renderCfg === 'function' && !window.renderCfg.__zhWrapped) {
       var orig = window.renderCfg;
@@ -234,8 +302,12 @@ const PC_CSS = `<style data-zh-pc="1">
   /* 积分 / 车辆 / 骑行页：适当放大网格 */
   .pt-grid,.rt-grid,.rt-grid3,.ctrl-grid{gap:12px}
   /* 积分日历在宽屏下别被拉成大色块 */
-  #pagePoints .cal-grid{grid-auto-rows:56px}
-  #pagePoints .cal-d{height:56px;min-height:0;border-radius:10px}
+  #pagePoints .cal-grid{grid-auto-rows:66px;gap:7px}
+  #pagePoints .cal-d{aspect-ratio:auto;width:100%;height:66px;min-height:0;border-radius:12px;font-size:18px;font-weight:800;letter-spacing:.3px}
+  #pagePoints .cal-d .dot{font-size:12px;margin-top:2px}
+  #pagePoints .cal-wd{font-size:14px;padding-bottom:8px;letter-spacing:.5px}
+  #pagePoints .pc-head h4{font-size:16px}
+  #pagePoints .pc-head .btn.sm{font-size:12px;padding:7px 14px}
   /* 车辆页两列 */
   #pageVehicle{width:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(470px,1fr));gap:16px;align-items:start}
   #pageVehicle>.acc-chips,#pageVehicle>.opt-row,#pageVehicle>.foot{grid-column:1/-1}
@@ -306,6 +378,40 @@ const $httpClient = {
   head: (o, cb) => httpRequest('HEAD', o, cb),
   patch: (o, cb) => httpRequest('PATCH', o, cb),
 };
+
+// ============================== 上游脚本自更新 ==============================
+const SCRIPT_URLS = [
+  'https://raw.githubusercontent.com/cluck798/ZEEHO/refs/heads/main/script/zeeho_box_enhanced.js',
+  'https://cdn.jsdelivr.net/gh/cluck798/ZEEHO@main/script/zeeho_box_enhanced.js'
+];
+async function selfUpdateScript() {
+  const cur = scriptVersionOf(SOURCE);
+  let lastErr = '';
+  for (const u of SCRIPT_URLS) {
+    try {
+      const resp = await fetch(u + '?t=' + Date.now(), {
+        signal: AbortSignal.timeout(90000),
+        headers: { 'User-Agent': 'zeeho-nas' }
+      });
+      if (!resp.ok) { lastErr = `${u} -> HTTP ${resp.status}`; continue; }
+      const txt = await resp.text();
+      if (txt.length < 200000) { lastErr = `${u} -> 文件过小 ${txt.length}B`; continue; }
+      const ver = scriptVersionOf(txt);
+      if (ver !== 'unknown' && ver === cur) {
+        return { ok: true, changed: false, version: cur, bytes: txt.length, note: '已是最新' };
+      }
+      fs.writeFileSync(SCRIPT_FILE + '.new', txt, 'utf8');
+      fs.renameSync(SCRIPT_FILE + '.new', SCRIPT_FILE);
+      const now = reloadScript();
+      pushLog(`[self-update] ${cur} -> ${now} (${txt.length}B)`);
+      return { ok: true, changed: true, from: cur, version: now, bytes: txt.length };
+    } catch (e) {
+      lastErr = String((e && e.message) || e);
+    }
+  }
+  pushLog(`[self-update] 失败: ${lastErr}`);
+  return { ok: false, error: lastErr || '下载失败' };
+}
 
 // ============================== 脚本执行 ==============================
 function runScript(reqInfo) {
@@ -412,6 +518,14 @@ const server = http.createServer(async (req, res) => {
     res.end('ok');
     return;
   }
+  if (urlPath.startsWith('/api/self-update')) {
+    if (!authOk(req)) { res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="ZEEHO"' }); res.end('auth required'); return; }
+    const started = Date.now();
+    const r = await selfUpdateScript();
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(Object.assign({ tookMs: Date.now() - started }, r)));
+    return;
+  }
   if (urlPath.startsWith('/__diagnostics')) {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({
@@ -419,7 +533,8 @@ const server = http.createServer(async (req, res) => {
       node: process.version,
       tz: TZ,
       script: SCRIPT_FILE,
-      scriptMtime: SCRIPT_MTIME,
+      scriptMtime: new Date(SCRIPT_MTIME).toISOString(),
+      scriptVersion: scriptVersionOf(SOURCE),
       storeKeys: Object.keys(store),
       cron: CRON_ENABLE ? CRON_TIME : 'off',
       logs: ring.slice(-60),
@@ -448,6 +563,7 @@ const server = http.createServer(async (req, res) => {
     body,
   };
 
+  reloadIfChanged();
   const started = Date.now();
   const out = await runScript(reqInfo);
   const headers = sanitizeHeaders(out.headers);

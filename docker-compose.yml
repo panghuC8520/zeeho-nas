@@ -22,3 +22,5 @@ services:
     volumes:
       # 账号 Token 与配置都在这里，务必纳入备份
       - ./data:/app/data
+      # 上游脚本挂出来，面板里的「立即更新」直接写这个文件，重建容器也不丢
+      - ./script:/app/script

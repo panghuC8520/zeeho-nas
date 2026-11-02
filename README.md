@@ -49,6 +49,12 @@
 - 自定义 Bark Key，签到结果 / 充电充满 / 车辆离线 / 移车提醒推送到手机
 - 容器内的 `$notification` 落日志，`/__diagnostics` 可回看
 
+### 🔄 面板内一键更新（v1.2.0 起）
+- 上游发新版时，面板「设置 → 关于」会出现「**立即更新服务器脚本**」按钮：下载 → 校验体积/版本号 → 原子替换 → **热重载**（不用重启容器），页面自动刷新
+- 脚本挂在 `./script` 卷上，更新直接写宿主机文件，重建容器不丢
+- 命令行等价：`bash update-script.sh`（同样会被热重载感知，`docker compose restart` 已非必需）
+- 接口：`POST /api/self-update`（若设了 `PANEL_AUTH` 同样需要凭据），返回 `{ok, from, version, bytes, tookMs}`
+
 ### 🔄 版本自更新
 - 面板「设置 → 关于 → 检查更新」双源比对版本号（raw + jsDelivr，避免 CDN 12h 缓存误判）
 - 服务器侧同样可以 `bash update-script.sh` 直接把脚本换新
